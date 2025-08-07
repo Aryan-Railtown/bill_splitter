@@ -70,10 +70,11 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-
+.railtracks/
 # PyBuilder
 .pybuilder/
 target/
+.vscode/
 
 # Jupyter Notebook
 .ipynb_checkpoints
