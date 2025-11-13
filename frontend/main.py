@@ -1,7 +1,7 @@
 import streamlit as st
 from data.mock import friends, group_names, group_to_members, friend_to_groups, friends_grid
 from splitter_window import splitter_window
-from groups import group_page
+from groups import group_page, group_list
 from summary import summary_page
 
 st.set_page_config(page_title="Bill Splitter", layout="wide")
@@ -19,11 +19,12 @@ if "split_result" not in st.session_state:
 if 'splitter_user_idx' not in st.session_state:
     st.session_state.splitter_user_idx = 0 
 
-def to_splitter(parsed_bill):
+def to_splitter(parsed_bill, paid_by):
     st.session_state.parsed_bill = parsed_bill
     st.session_state.ui_step = "splitter_window"
     st.session_state.item_assignments = {}
     st.session_state.splitter_user_idx = 0
+    st.session_state.paid_by = paid_by
 
 def to_summary(split_result):
     st.session_state.split_result = split_result
@@ -58,7 +59,6 @@ with tab1:
                     to_splitter
                 )
         else:
-            from groups import group_list
             st.header("All Groups")
             group_list(group_names, select_group)
 
@@ -71,7 +71,7 @@ with tab1:
         )
 
     elif st.session_state.ui_step == "summary":
-        summary_page(st.session_state.split_result, to_home)
+        summary_page(st.session_state.split_result, st.session_state.paid_by, to_home)
 
 with tab2:
     st.header("Friends")
