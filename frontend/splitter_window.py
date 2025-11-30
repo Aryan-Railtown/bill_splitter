@@ -1,5 +1,6 @@
 import streamlit as st
 import backend.splitter
+import asyncio
 
 def splitter_window(group_name, members, parsed_bill, to_summary_callback):
     # Avoid empty bill case
@@ -19,7 +20,7 @@ def splitter_window(group_name, members, parsed_bill, to_summary_callback):
         chosen = st.checkbox(
             f"{item_name} (${cost})",
             value=(person in assigned),
-            key=f"{person}_{item_name}_split"
+            key=f"{person}_{item_name}_split",
         )
         if chosen:
             if person not in assigned:
@@ -40,8 +41,13 @@ def splitter_window(group_name, members, parsed_bill, to_summary_callback):
             st.session_state.splitter_user_idx += 1
             st.rerun()
         elif idx == len(members) - 1 and st.button("Split/Process"):
-            split_result = backend.splitter.process(
-                members, parsed_bill, st.session_state.item_assignments, st.session_state.paid_by
+            split_result = asyncio.run(
+                backend.splitter.process(
+                    members,
+                    parsed_bill,
+                    st.session_state.item_assignments,
+                    st.session_state.paid_by,
+                )
             )
             to_summary_callback(split_result)
             st.rerun()

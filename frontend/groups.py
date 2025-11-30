@@ -1,10 +1,15 @@
 import streamlit as st
 import backend.bill_parser
+import asyncio
+
+async def process_bill(uploaded_file):
+    return await backend.bill_parser.process(uploaded_file)
 
 def group_list(groups, select_group):
     for group in groups:
         if st.button(group, key=group):
             select_group(group)
+
 def group_page(group_name, members, upload_callback):
     st.header(f"Group: {group_name}")
     st.subheader("Members")
@@ -21,7 +26,7 @@ def group_page(group_name, members, upload_callback):
         uploaded_file = st.file_uploader("Upload bill image", type=["jpg", "jpeg", "png"])
         if uploaded_file:
             st.success("Bill image uploaded! LLM is processing...")
-            parsed_bill = backend.bill_parser.process(uploaded_file)
+            parsed_bill = asyncio.run(process_bill(uploaded_file))  # Await the async function
             st.session_state.bill_upload_pending_paid_by = True
             st.session_state.temp_parsed_bill = parsed_bill
             st.session_state.show_uploader = False

@@ -33,12 +33,8 @@ async def process(uploaded_file):
     """
     # Convert uploaded_file to base64
     file_bytes = uploaded_file.read()
-    base64_image_str = base64.b64encode(file_bytes).decode("utf-8")
-    image_url = {
-        "url": f"data:{uploaded_file.type};base64,{base64_image_str}",
-        "format": uploaded_file.type,
-    }
-
+    base64_image_str = "data:image/jpg;base64,"
+    base64_image_str += base64.b64encode(file_bytes).decode("utf-8")
     try:
         resp = await rt.call(
             spliter_agent,
@@ -61,3 +57,13 @@ async def process(uploaded_file):
                 Item(item="item4", cost=5.3),
             ]
         )
+
+
+if __name__ == "__main__":
+    import streamlit as st
+    import asyncio
+    uploaded_file = st.file_uploader("Upload bill image", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        st.success("Bill image uploaded! LLM is processing...")
+        parsed_bill = asyncio.run(process(uploaded_file))
+        print(parsed_bill)
