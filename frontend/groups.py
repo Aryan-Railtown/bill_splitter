@@ -38,8 +38,46 @@ def group_page(group_name, members, upload_callback):
         paid_by = st.selectbox("Select the person who paid:", members, key="paid_by_select")
         if st.button("Confirm Paid By"):
             st.session_state.paid_by = paid_by
-            parsed_bill = st.session_state.temp_parsed_bill
-            upload_callback(parsed_bill, paid_by)
+            # Move to split choice step (equal by default)
             st.session_state.bill_upload_pending_paid_by = False
-            del st.session_state.temp_parsed_bill
+            st.session_state.bill_upload_pending_split_choice = True
             st.rerun()
+
+    # After confirming who paid, choose split method
+    if st.session_state.get("bill_upload_pending_split_choice", False):
+        st.markdown("### How would you like to split the bill?")
+        split_choice = st.radio(
+            "Choose split method:", ["Split equally (default)", "Split unequally"],
+            index=0,
+            key="split_choice_radio",
+        )
+
+        parsed_bill = st.session_state.get("temp_parsed_bill")
+        paid_by = st.session_state.get("paid_by")
+
+        if split_choice.startswith("Split equally"):
+            if st.button("Confirm Equal Split"):
+                # Compute equal split locally and go to summary
+                members_list = members
+                total = sum(item.cost for item in parsed_bill.items) if parsed_bill else 0.0
+                share = round(total / len(members_list), 2) if members_list else 0.0
+                split_result = {
+                    m: (0.0 if m == paid_by else share) for m in members_list
+                }
+                # Store result and navigate to summary
+                st.session_state.split_result = split_result
+                st.session_state.ui_step = "summary"
+                # cleanup
+                st.session_state.bill_upload_pending_split_choice = False
+                if "temp_parsed_bill" in st.session_state:
+                    del st.session_state.temp_parsed_bill
+                st.rerun()
+        else:
+            if st.button("Split Unequally / Go to Splitter"):
+                # Send to the splitter window for manual unequal assignments
+                if parsed_bill and paid_by:
+                    upload_callback(parsed_bill, paid_by)
+                st.session_state.bill_upload_pending_split_choice = False
+                if "temp_parsed_bill" in st.session_state:
+                    del st.session_state.temp_parsed_bill
+                st.rerun()
