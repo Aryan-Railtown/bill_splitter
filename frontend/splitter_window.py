@@ -41,13 +41,25 @@ def splitter_window(group_name, members, parsed_bill, to_summary_callback):
             st.session_state.splitter_user_idx += 1
             st.rerun()
         elif idx == len(members) - 1 and st.button("Split/Process"):
-            split_result = asyncio.run(
-                backend.splitter.process(
-                    members,
-                    parsed_bill,
-                    st.session_state.item_assignments,
-                    st.session_state.paid_by,
+            # backend.splitter.process signature changed to:
+            # async def process(store_path, group_id, members, parsed_bill, item_assignments, paid_by, ...)
+            # Build minimal member dicts (id/name) from the simple name list used in the UI.
+            member_objs = [{"id": m, "name": m} for m in members]
+            store_path = "data/storge/store.json"
+            group_id = group_name
+            try:
+                split_result = asyncio.run(
+                    backend.splitter.process(
+                        store_path,
+                        group_id,
+                        member_objs,
+                        parsed_bill,
+                        st.session_state.item_assignments,
+                        st.session_state.paid_by,
+                    )
                 )
-            )
+            except Exception as e:
+                st.error(f"Failed to process split: {e}")
+                split_result = None
             to_summary_callback(split_result)
             st.rerun()

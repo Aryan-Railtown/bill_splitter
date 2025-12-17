@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "app": {
+    "currency_default": "CAD"
+  },
+  "users": [],
+  "groups": [],
+  "transactions": [],
+  "payments": [],
+  "balances": {
+    "updated_at": null,
+    "by_group": {},
+    "global": {
+      "net": {}
+    }
+  }
+}
