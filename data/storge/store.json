@@ -3,13 +3,104 @@
   "app": {
     "currency_default": "CAD"
   },
-  "users": [],
-  "groups": [],
+  "users": [
+    {
+      "id": "u_313e08088156",
+      "name": "Aryan"
+    },
+    {
+      "id": "u_b323a60258db",
+      "name": "Amir"
+    },
+    {
+      "id": "u_73798891839f",
+      "name": "Logan"
+    },
+    {
+      "id": "u_7d900cb0a2f7",
+      "name": "Levi"
+    },
+    {
+      "id": "u_7775241701b4",
+      "name": "Tristan"
+    },
+    {
+      "id": "u_be59c4bbaef6",
+      "name": "Jamie"
+    },
+    {
+      "id": "u_afa731bf55f6",
+      "name": "Guan"
+    },
+    {
+      "id": "u_64ceb3465b61",
+      "name": "Chris"
+    },
+    {
+      "id": "u_4ea72cf074f9",
+      "name": "Marwan"
+    },
+    {
+      "id": "u_2e5b2f47dd3f",
+      "name": "Matthew"
+    },
+    {
+      "id": "u_ebbf659cc2da",
+      "name": "Elliot"
+    }
+  ],
+  "groups": [
+    {
+      "id": "g_6bebfb04333e",
+      "name": "RT_DEV",
+      "member_ids": [
+        "u_b323a60258db",
+        "u_73798891839f",
+        "u_7d900cb0a2f7",
+        "u_7775241701b4",
+        "u_be59c4bbaef6",
+        "u_afa731bf55f6",
+        "u_313e08088156"
+      ]
+    },
+    {
+      "id": "g_7cd10b8b830a",
+      "name": "Food",
+      "member_ids": [
+        "u_64ceb3465b61",
+        "u_afa731bf55f6",
+        "u_4ea72cf074f9",
+        "u_2e5b2f47dd3f",
+        "u_ebbf659cc2da",
+        "u_313e08088156"
+      ]
+    },
+    {
+      "id": "g_a120b44f69d7",
+      "name": "Random",
+      "member_ids": [
+        "u_be59c4bbaef6",
+        "u_afa731bf55f6",
+        "u_ebbf659cc2da",
+        "u_313e08088156"
+      ]
+    }
+  ],
   "transactions": [],
   "payments": [],
   "balances": {
-    "updated_at": null,
-    "by_group": {},
+    "updated_at": "2025-12-17T22:07:10.318314+00:00",
+    "by_group": {
+      "g_6bebfb04333e": {
+        "net": {}
+      },
+      "g_7cd10b8b830a": {
+        "net": {}
+      },
+      "g_a120b44f69d7": {
+        "net": {}
+      }
+    },
     "global": {
       "net": {}
     }

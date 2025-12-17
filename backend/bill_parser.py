@@ -21,7 +21,7 @@ class SpliterOutput(BaseModel):
 
 spliter_agent = rt.agent_node(
     output_schema=SpliterOutput,
-    name="Spliter",
+    name="Parsing agent",
     system_message=system_message,
     llm=model,
 )

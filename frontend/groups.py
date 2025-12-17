@@ -66,20 +66,25 @@ def group_page(group_name, members, upload_callback):
                 }
                 # Store result and navigate to summary
                 st.session_state.split_result = split_result
-                    # Persist a simple ledger entry in session_state for demo purposes
+                # Save parsed bill and context so the Data Manager can persist the transaction
+                st.session_state.parsed_bill_for_persist = parsed_bill
+                st.session_state.members_for_persist = members_list
+                st.session_state.group_for_persist = group_name
+                # Persist a simple ledger entry in session_state for demo purposes
                 if 'ledger' not in st.session_state:
                     st.session_state.ledger = []
-                    debts = []
-                    for m in members_list:
-                        if m == paid_by:
-                            continue
-                        amt = 0.0 if m == paid_by else share
-                        if amt > 0:
-                            debts.append({'from': m, 'to': paid_by, 'amount': amt, 'group': group_name})
-                    st.session_state.ledger.append({'group': group_name, 'paid_by': paid_by, 'debts': debts})
+                debts = []
+                for m in members_list:
+                    if m == paid_by:
+                        continue
+                    amt = 0.0 if m == paid_by else share
+                    if amt > 0:
+                        debts.append({'from': m, 'to': paid_by, 'amount': amt, 'group': group_name})
+                st.session_state.ledger.append({'group': group_name, 'paid_by': paid_by, 'debts': debts})
                 st.session_state.ui_step = "summary"
                 # cleanup
                 st.session_state.bill_upload_pending_split_choice = False
+                # keep parsed bill around in parsed_bill_for_persist; remove temp_parsed_bill
                 if "temp_parsed_bill" in st.session_state:
                     del st.session_state.temp_parsed_bill
                 st.rerun()

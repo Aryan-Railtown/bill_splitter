@@ -55,6 +55,11 @@ def friends_grid(friends, friend_to_groups, store_path: str = "data/storge/store
             net = nets.get(friend, 0.0)
             label = f"{friend} (You)" if friend == profile_name else friend
             color = "green" if net > 0 else ("red" if net < 0 else "black")
-            amount_str = f"{net:+.2f}"
+            if net > 0:
+                amount_str = f"+{net:.2f}"
+            elif net < 0:
+                amount_str = f"-{abs(net):.2f}"
+            else:
+                amount_str = "0.00"
             st.markdown(f"**{label}**<br/><span style='color:{color}'>${amount_str}</span>", unsafe_allow_html=True)
             st.write(f"Groups: {', '.join(friend_to_groups.get(friend, []))}")

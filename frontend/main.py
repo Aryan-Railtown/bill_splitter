@@ -48,9 +48,13 @@ with st.sidebar:
     if st.button("Save Profile"):
         if name_input:
             st.session_state.profile_name = name_input
-            # ensure the profile appears in friends list
+            # ensure the profile appears in friends list and session group members
             if name_input not in st.session_state.friends:
                 st.session_state.friends.append(name_input)
+            for g in st.session_state.group_to_members:
+                if name_input not in st.session_state.group_to_members[g]:
+                    st.session_state.group_to_members[g].append(name_input)
+                    st.session_state.friend_to_groups.setdefault(name_input, []).append(g)
 
             # Persist user to JSON store and ensure groups include them
             store_path = "data/storge/store.json"
@@ -58,33 +62,30 @@ with st.sidebar:
             profile_resp = dt.tool_upsert_user(store_path, name_input)
             profile_id = profile_resp["user_id"]
 
-            # ensure all members across groups exist in the store and create groups if missing
             p = Path(store_path)
             store = dt.read_json(p)
-            # helper: find group by name
-            def find_group_by_name(s, name):
-                for g in s.get("groups", []):
-                    if g.get("name") == name:
-                        return g
-                return None
 
-            for gname, members in st.session_state.group_to_members.items():
-                member_ids = []
+            # Ensure every user in session groups exists in the store (upsert)
+            for members in st.session_state.group_to_members.values():
                 for m in members:
-                    resp = dt.tool_upsert_user(store_path, m)
-                    member_ids.append(resp["user_id"])
+                    dt.tool_upsert_user(store_path, m)
 
-                grp = find_group_by_name(store, gname)
-                if grp is None:
-                    # create new group
+            # Ensure profile is a member of every group present in the store
+            modified = False
+            for grp in store.get("groups", []):
+                if profile_id not in grp.get("member_ids", []):
+                    grp.setdefault("member_ids", []).append(profile_id)
+                    modified = True
+
+            if modified:
+                dt.write_json_atomic(p, store)
+
+            # Also ensure any groups present in session but missing in store are created
+            existing_group_names = {g["name"] for g in store.get("groups", [])}
+            for gname, members in st.session_state.group_to_members.items():
+                if gname not in existing_group_names:
+                    member_ids = [dt.tool_upsert_user(store_path, m)["user_id"] for m in members]
                     dt.tool_create_group(store_path, gname, member_ids)
-                else:
-                    # ensure profile is a member
-                    if profile_id not in grp.get("member_ids", []):
-                        grp.setdefault("member_ids", []).append(profile_id)
-                        # ensure balances bucket exists
-                        store["balances"].setdefault("by_group", {}).setdefault(grp["id"], {"net": {}})
-                        dt.write_json_atomic(p, store)
 
             st.success(f"Profile saved as {name_input}")
             st.rerun()
