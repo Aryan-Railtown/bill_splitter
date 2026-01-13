@@ -89,12 +89,12 @@ def find_user_id_by_name(store: Dict[str, Any], name: str) -> Optional[str]:
 
 def require_user(store: Dict[str, Any], user_id: str) -> None:
     """Raise ValueError if `user_id` does not exist in `store["users"]`."""
-    if user_id not in index_by_id(store["users"]):
+    if user_id not in index_by_id(store.get("users", {})):
         raise ValueError(f"Unknown user_id: {user_id}")
 
 def require_group(store: Dict[str, Any], group_id: str) -> None:
     """Raise ValueError if `group_id` does not exist in `store["groups"]`."""
-    if group_id not in index_by_id(store["groups"]):
+    if group_id not in index_by_id(store.get("groups", [])):
         raise ValueError(f"Unknown group_id: {group_id}")
 
 
@@ -351,7 +351,6 @@ def tool_add_transaction_custom_split(
 def tool_init_store(path: str) -> Dict[str, Any]:
     """
     Initialize the JSON store file if it does not exist.
-
     Args:
         path: Absolute or relative filesystem path to the JSON store.
 

@@ -48,7 +48,8 @@ using the provided tools. Always obey the following rules:
    (member display names mapped to net dollar amounts with two decimals).
 """
 
-llm_model = rt.llm.OpenAILLM("gpt-4o")
+llm_model = rt.llm.OpenAILLM("gpt-5.2")
+
 
 finance_agent = rt.agent_node(
     name="Data Manager",
@@ -161,51 +162,27 @@ async def process(
         for uid, cents in shares_by_user_cents.items()
     ]
 
-    orchestration_prompt = f"""
-You are processing a single bill for group '{group_id}' stored at '{store_path}'.
+    # Deterministically persist the transaction and fetch balances using the data tools
+    # 1) Ensure the store exists
+    tool_init_store(store_path)
 
-Bill metadata:
-- Title: {bill_title}
-- Total amount cents: {total_cents}
-- Currency: {currency}
-- Paid by: {paid_by_id} ({paid_by_name})
-- Notes: {notes}
+    # 2) Persist the transaction using the exact per-user shares and item metadata
+    try:
+      tx_resp = tool_add_transaction_custom_split(
+        path=store_path,
+        group_id=group_id,
+        title=bill_title,
+        paid_by=paid_by_id,
+        shares=shares_payload,
+        currency=currency,
+        notes=notes,
+        items=bill_items_payload,
+      )
+    except Exception:
+      # If the custom-split tool fails, re-raise with context
+      raise
 
-Members:
-{json.dumps(members, indent=2)}
-
-Per-item assignments (costs already converted to cents):
-{json.dumps(bill_items_payload, indent=2)}
-
-Exact per-user shares (must be used verbatim when calling add_transaction_custom_split):
-{json.dumps(shares_payload, indent=2)}
-
-Actions to perform:
-1. Call `init_store` with path="{store_path}".
-2. Call `add_transaction_custom_split` with:
-   - path = "{store_path}"
-   - group_id = "{group_id}"
-   - title = "{bill_title}"
-   - paid_by = "{paid_by_id}"
-   - currency = "{currency}"
-   - notes = {json.dumps(notes)}
-   - items = {json.dumps(bill_items_payload)}
-   - shares = the list shown above (use share_amount_cents values as-is).
-3. After the transaction is recorded, call `get_group_balances` for this group.
-4. Build your final reply using the BalanceSummary schema. Map member *names* to their net balances.
-   Positive numbers mean the member is owed money; negative numbers mean they owe the group.
-"""
-
-    resp = await rt.call(
-        finance_agent,
-        user_input=rt.llm.UserMessage(orchestration_prompt),
-    )
-
-    # Pull the structured reply (already validated against BalanceSummary)
-    summary: BalanceSummary = resp.structured  # type: ignore
-    computed_balances = dict(summary.balances)
-
-    # Recompute from the ledger for determinism (guards against hallucinated math in the reply)
+    # 3) Read balances from the ledger
     balances_snapshot = tool_get_group_balances(store_path, group_id)
     balance_by_user_cents: Dict[str, int] = {m["id"]: 0 for m in members}
     for edge in balances_snapshot.get("edges", []):
@@ -219,8 +196,5 @@ Actions to perform:
         dollars = float((Decimal(cents) / Decimal(100)).quantize(Decimal("0.01")))
         verified_balances[member["name"]] = dollars
 
-    # Optional: surface both (e.g. log a warning if they diverge)
-    if any(abs(verified_balances[k] - computed_balances.get(k, 0.0)) > 0.009 for k in verified_balances):
-        print("Warning: LLM-reported balances differ from ledger; using ledger values.")
-
+    # Return the authoritative balances computed from the ledger
     return verified_balances
